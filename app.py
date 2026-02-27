@@ -5,12 +5,23 @@ import pandas as pd
 import time
 from dotenv import load_dotenv
 
-# --- 1. Security & Auth ---
-load_dotenv()
-api_key = os.getenv("GEMINI_API_KEY")
+# --- 1. Security & Auth (Upgraded for Cloud) ---
+# First, try to fetch the key from Streamlit's Cloud Secrets
+try:
+    api_key = st.secrets["GEMINI_API_KEY"]
+except KeyError:
+    # If not on the cloud, fallback to the local .env file
+    load_dotenv()
+    api_key = os.getenv("GEMINI_API_KEY")
+
 if not api_key:
-    st.error("🚨 SECURITY HALT: API Key not found. Check your .env file.")
+    st.error("🚨 SECURITY HALT: API Key not found. Check Streamlit Secrets or local .env file.")
     st.stop()
+
+genai.configure(api_key=api_key)
+model = genai.GenerativeModel('gemini-2.5-flash') 
+
+# ... (Leave the rest of your app.py code exactly as it is below this)
 
 genai.configure(api_key=api_key)
 model = genai.GenerativeModel('gemini-2.5-flash') 
