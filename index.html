@@ -732,6 +732,7 @@ document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
 
 // ── PAYMENT MODAL ──
 const UPI_ID = '7827182673@upi';
+const UPI_NAME = 'VibePitch';
 const PLANS  = {
   growth: { name: 'Growth Plan', base: 999,  perUser: 250 },
   pro:    { name: 'Pro Plan',    base: 2499, perUser: 200 }
@@ -753,8 +754,8 @@ function updateModal() {
   document.getElementById('total-amount').textContent     = '₹' + total.toLocaleString('en-IN');
 
   // Generate QR via qrserver.com
-  const upiUrl = `upi://pay?pa=${UPI_ID}&pn=VibePitch&am=${total}&cu=INR`;
-  const qrUrl  = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(upiUrl)}&bgcolor=ffffff&color=000000&margin=2`;
+  const upiUrl = `upi://pay?pa=${UPI_ID}&pn=VibePitch&am=${total}.00&cu=INR&tn=VibePitch`;
+  const qrUrl  = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(upiUrl)}&ecc=M&margin=4`;
   document.getElementById('qr-img').src = qrUrl;
 }
 
@@ -782,11 +783,12 @@ function changeMembers(delta) {
   updateModal();
 }
 
-function submitPayment() {
+async function submitPayment() {
   const name  = document.getElementById('pay-name').value.trim();
   const email = document.getElementById('pay-email').value.trim();
   const utr   = document.getElementById('pay-utr').value.trim();
   const msg   = document.getElementById('submit-msg');
+  const btn   = event.target;
 
   if (!name || !email || !utr) {
     msg.style.display = 'block';
@@ -797,15 +799,40 @@ function submitPayment() {
 
   const plan  = PLANS[currentPlan];
   const total = calcTotal();
-  const subject = encodeURIComponent(`VibePitch Payment — ${name} — ₹${total}`);
-  const body    = encodeURIComponent(
-    `New Payment Submission\n\nName: ${name}\nEmail: ${email}\nPlan: ${plan.name}\nAdditional Members: ${memberCount}\nTotal Paid: ₹${total}\nUTR / Transaction ID: ${utr}\n\nPlease verify and send access password to: ${email}`
-  );
-  window.location.href = `mailto:manishtheking0410@gmail.com?subject=${subject}&body=${body}`;
 
-  msg.style.display = 'block';
-  msg.style.color   = '#00cc66';
-  msg.textContent   = '✓ Submitted! You will receive your access password within a few hours.';
+  btn.textContent = 'Submitting...';
+  btn.disabled    = true;
+
+  try {
+    const res = await fetch('https://formspree.io/f/xbdzrken', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify({
+        name:    name,
+        email:   email,
+        plan:    plan.name,
+        members: memberCount,
+        total:   '₹' + total,
+        utr:     utr,
+        message: `New payment from ${name}. Plan: ${plan.name}. Total: ₹${total}. UTR: ${utr}. Send password to: ${email}`
+      })
+    });
+
+    if (res.ok) {
+      msg.style.display = 'block';
+      msg.style.color   = '#00cc66';
+      msg.textContent   = '✓ Payment details received! You will get your access password within a few hours.';
+      btn.textContent   = '✓ Submitted';
+    } else {
+      throw new Error('Failed');
+    }
+  } catch(e) {
+    msg.style.display = 'block';
+    msg.style.color   = '#ff5555';
+    msg.textContent   = 'Submission failed. Please email manishtheking0410@gmail.com directly with your UTR.';
+    btn.textContent   = 'I\'ve Paid — Send Me Access';
+    btn.disabled      = false;
+  }
 }
 
 document.getElementById('payModal').addEventListener('click', function(e) {
