@@ -1,6 +1,7 @@
 import streamlit as st
 import google.generativeai as genai
 import os
+import json
 import pandas as pd
 import time
 import requests
@@ -60,7 +61,6 @@ def load_users() -> dict:
 
 def check_login(email: str, password: str) -> dict | None:
     users = load_users()
-    st.write("DEBUG users loaded:", users)  # temporary debug
     user = users.get(email.lower().strip())
     if user and user["password"] == password.strip():
         return user
@@ -208,7 +208,7 @@ def extract_brochure_tiers(brochure_text: str) -> list:
 BROCHURE TEXT:
 \"\"\"{brochure_text[:5000]}\"\"\"
 
-Extract all sponsorship tiers mentioned. Output a JSON array:
+Extract all sponsorship tiers mentioned. Output a JSON array ONLY — no explanation, no markdown, no backticks:
 [
   {{
     "tier_name": "Title Sponsor",
@@ -218,13 +218,23 @@ Extract all sponsorship tiers mentioned. Output a JSON array:
   }}
 ]
 
-If no tiers found, return [].
-Output ONLY valid JSON. No explanation, no markdown backticks."""
+Rules:
+- If price is not mentioned, put "On Request"
+- If benefits are not listed, summarize what you can infer
+- ONLY output the JSON array, nothing else
+- If no tiers found, return []"""
     try:
         response = model.generate_content(prompt).text.strip()
+        # Strip any markdown formatting
         response = response.replace("```json", "").replace("```", "").strip()
+        # Find the JSON array even if there's extra text
+        start = response.find("[")
+        end   = response.rfind("]") + 1
+        if start != -1 and end > start:
+            response = response[start:end]
         return json.loads(response)
-    except Exception:
+    except Exception as e:
+        st.error(f"Tier extraction failed: {e}")
         return []
 
 
