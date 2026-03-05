@@ -12,7 +12,7 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.mime.base import MIMEBase
 from email import encoders
-import json
+import pdfplumber
 
 # Must be FIRST Streamlit command
 st.set_page_config(page_title="VibePitch B2B", layout="wide", page_icon="⚡")
@@ -37,37 +37,61 @@ genai.configure(api_key=api_key)
 model = genai.GenerativeModel('gemini-2.5-flash')
 
 # ──────────────────────────────────────────────
-# 2. PASSWORD GATE
+# 2. USER AUTH — reads from users.txt on GitHub
 # ──────────────────────────────────────────────
-app_password = None
-try:
-    if "APP_PASSWORD" in st.secrets:
-        app_password = st.secrets["APP_PASSWORD"]
-except Exception:
-    pass
-if not app_password:
-    app_password = os.getenv("APP_PASSWORD")
 
-if app_password:
-    if "authenticated" not in st.session_state:
-        st.session_state.authenticated = False
-    if not st.session_state.authenticated:
-        st.markdown("""
-            <div style='text-align:center; padding: 60px 0 20px 0;'>
-                <h1>⚡ VibePitch</h1>
-                <p style='color: gray;'>AI-Powered Sponsorship Outreach</p>
-            </div>
-        """, unsafe_allow_html=True)
-        col1, col2, col3 = st.columns([1, 2, 1])
-        with col2:
-            entered = st.text_input("Enter Access Password", type="password", placeholder="••••••••")
-            if st.button("Enter", use_container_width=True, type="primary"):
-                if entered == app_password:
-                    st.session_state.authenticated = True
-                    st.rerun()
-                else:
-                    st.error("Incorrect password. Try again.")
-        st.stop()
+USERS_FILE = "users.txt"
+
+def load_users() -> dict:
+    """Load users from local users.txt. Returns {email: {password, plan}}"""
+    users = {}
+    if not os.path.exists(USERS_FILE):
+        return users
+    with open(USERS_FILE, "r") as f:
+        for line in f:
+            line = line.strip()
+            if not line or line.startswith("#"):
+                continue
+            parts = line.split(",")
+            if len(parts) >= 3:
+                email, password, plan = parts[0].strip().lower(), parts[1].strip(), parts[2].strip()
+                users[email] = {"password": password, "plan": plan}
+    return users
+
+def check_login(email: str, password: str) -> dict | None:
+    users = load_users()
+    st.write("DEBUG users loaded:", users)  # temporary debug
+    user = users.get(email.lower().strip())
+    if user and user["password"] == password.strip():
+        return user
+    return None
+
+if "authenticated" not in st.session_state:
+    st.session_state.authenticated = False
+if "user_plan" not in st.session_state:
+    st.session_state.user_plan = None
+
+if not st.session_state.authenticated:
+    st.markdown("""
+        <div style='text-align:center; padding: 60px 0 20px 0;'>
+            <h1>⚡ VibePitch</h1>
+            <p style='color: gray;'>AI-Powered Sponsorship Outreach</p>
+        </div>
+    """, unsafe_allow_html=True)
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
+        login_email = st.text_input("Email Address", placeholder="you@gmail.com")
+        login_pass  = st.text_input("Access Password", type="password", placeholder="VIBE-XXXX-XXXX")
+        if st.button("Enter", use_container_width=True, type="primary"):
+            user = check_login(login_email, login_pass)
+            if user:
+                st.session_state.authenticated = True
+                st.session_state.user_plan     = user["plan"]
+                st.rerun()
+            else:
+                st.error("Invalid email or password. Contact support if you need help.")
+        st.caption("Don't have access? [Get started](https://manish-tk04.github.io/vibepitch-b2b/#pricing)")
+    st.stop()
 
 # ──────────────────────────────────────────────
 # 3. SESSION STATE
@@ -411,12 +435,15 @@ with st.expander("📄 Sponsorship Brochure & Tier Extractor"):
             with st.spinner("Reading brochure and extracting tiers..."):
                 file_bytes = brochure_file.read()
                 if brochure_file.type == "application/pdf":
-                    b64 = base64.b64encode(file_bytes).decode()
-                    resp = genai.GenerativeModel('gemini-2.5-flash').generate_content([
-                        {"mime_type": "application/pdf", "data": b64},
-                        "Extract all text from this PDF brochure. Return only the raw text."
-                    ])
-                    st.session_state.brochure_text = resp.text
+                    # Extract text locally — free Gemini key doesn't support PDF uploads
+                    import io
+                    text_pages = []
+                    with pdfplumber.open(io.BytesIO(file_bytes)) as pdf:
+                        for page in pdf.pages:
+                            page_text = page.extract_text()
+                            if page_text:
+                                text_pages.append(page_text)
+                    st.session_state.brochure_text = "\n".join(text_pages)
                 elif brochure_file.type in ["image/png", "image/jpeg", "image/jpg"]:
                     b64 = base64.b64encode(file_bytes).decode()
                     resp = genai.GenerativeModel('gemini-2.5-flash').generate_content([

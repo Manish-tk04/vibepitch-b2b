@@ -1,0 +1,6 @@
+# VibePitch Users
+# Format: email,password,plan
+# Plans: growth or pro
+# Example: john@gmail.com,VIBE-2024-XK9P,growth
+#
+# ADD NEW USERS BELOW THIS LINE:
