@@ -260,12 +260,15 @@ TONE: {b_vibe}
 {tier_section}
 {template_section}
 WRITING RULES:
-1. Open with a hook referencing something SPECIFIC about {b_name}. No generic openers.
-2. Connect {b_name}'s marketing goals to THIS event's audience.
-3. Keep it under 180 words.
-4. One clear CTA at the end.
-5. Do NOT use placeholder text. Use the exact signature provided.
-6. Do NOT write from {b_name}'s perspective.
+1. Open with a hook referencing something SPECIFIC about {b_name}. No generic openers like "Hope this finds you well" or "I wanted to reach out".
+2. Connect {b_name}'s marketing goals to THIS event's audience with specific reasoning.
+3. LENGTH: Write 3 solid paragraphs. Not a one-liner, not an essay. First paragraph = hook + why them. Second paragraph = what the event offers + audience fit. Third paragraph = specific activation idea + CTA.
+4. FORMATTING: Plain text ONLY. No asterisks, no bold, no bullet points, no markdown of any kind. This is an email, not a document.
+5. Subject line must be specific, intriguing, and human — like a real salesperson wrote it. Examples of good subjects: "Your brand + 12,000 students at TechFest?", "A sponsorship idea for {b_name} — worth 5 minutes?", "How {b_name} can own the room at [Event]". NEVER write generic subjects like "Sponsorship Proposal" or "Partnership Opportunity".
+6. One clear CTA at the end — specific ask, not vague. E.g. "Would you be open to a 15-minute call this week?" not "Let me know your thoughts."
+7. Do NOT use placeholder text. Use the exact signature provided.
+8. Do NOT write from {b_name}'s perspective. You are pitching TO them.
+9. Write like a sharp, confident human — not like a corporate email template.
 
 OUTPUT FORMAT (strictly follow):
 SUBJECT: [subject line here]
@@ -622,7 +625,7 @@ with tab1:
                 if refinement:
                     with st.spinner("Rewriting..."):
                         ref_prompt = f"""Rewrite this email based on: "{refinement}"
-Output ONLY the new email body. No subject line.
+Output ONLY the new email body. No subject line. No markdown. No asterisks or bold text. Plain text only.
 
 ORIGINAL:
 {st.session_state.single_email_body}"""
@@ -792,7 +795,7 @@ with tab2:
             if st.button("🔄 Refine with AI (Bulk)"):
                 if refine_bulk:
                     with st.spinner("Rewriting..."):
-                        ref_prompt = f"""Rewrite based on: "{refine_bulk}"\nOutput ONLY the new email body.\n\nORIGINAL:\n{current_body}"""
+                        ref_prompt = f"""Rewrite based on: "{refine_bulk}"\nOutput ONLY the new email body. No markdown. No asterisks. Plain text only.\n\nORIGINAL:\n{current_body}"""
                         new_body = model.generate_content(ref_prompt).text.strip()
                         st.session_state.bulk_data.loc[
                             st.session_state.bulk_data["Brand Name"] == selected_brand, "Generated_Body"
@@ -961,7 +964,6 @@ with tab4:
                         st.success(f"Copy '{brand.get('brand_name')}' and '{brand.get('website')}' into the Bulk Processing tab grid manually.")
 
         st.divider()
-        
         disc_df = pd.DataFrame(st.session_state.discovered_brands)
         st.download_button(
             "📥 Export Discovered Brands (CSV)",
