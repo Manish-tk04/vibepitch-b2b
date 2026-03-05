@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>VibePitch — AI Sponsorship Automator</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500&family=Syne+Mono&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --black: #080808;
+  --white: #F0EDE6;
+  --yellow: #F5E642;
+  --gray: #141414;
+  --border: #222;
+  --mid: #555;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--black);
+  color: var(--white);
+  font-family: 'Inter', sans-serif;
+  overflow-x: hidden;
+}
+
+/* ── NAV ── */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 20px 60px;
+  border-bottom: 1px solid var(--border);
+  background: rgba(8,8,8,0.9);
+  backdrop-filter: blur(16px);
+}
+.nav-logo {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800; font-size: 22px;
+  letter-spacing: -0.5px;
+  color: var(--white);
+  text-decoration: none;
+}
+.nav-logo span { color: var(--yellow); }
+.nav-links { display: flex; gap: 36px; align-items: center; }
+.nav-links a {
+  font-size: 14px; font-weight: 400;
+  color: var(--mid); text-decoration: none;
+  transition: color 0.2s;
+  letter-spacing: 0.3px;
+}
+.nav-links a:hover { color: var(--white); }
+.nav-cta {
+  background: var(--yellow) !important;
+  color: var(--black) !important;
+  padding: 10px 22px !important;
+  font-weight: 600 !important;
+  font-size: 13px !important;
+  border-radius: 6px;
+  transition: opacity 0.2s !important;
+}
+.nav-cta:hover { opacity: 0.85 !important; }
+
+/* ── HERO ── */
+.hero {
+  min-height: 100vh;
+  display: flex; flex-direction: column;
+  justify-content: center;
+  padding: 140px 60px 80px;
+  border-bottom: 1px solid var(--border);
+  position: relative;
+  overflow: hidden;
+}
+.hero-tag {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: #111; border: 1px solid var(--border);
+  padding: 6px 14px; border-radius: 100px;
+  font-size: 12px; color: var(--mid);
+  font-family: 'Syne Mono', monospace;
+  margin-bottom: 36px;
+  width: fit-content;
+}
+.hero-tag::before {
+  content: ''; width: 7px; height: 7px;
+  background: var(--yellow); border-radius: 50%;
+  animation: pulse 2s infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+.hero h1 {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: clamp(52px, 7vw, 100px);
+  line-height: 0.95;
+  letter-spacing: -3px;
+  max-width: 900px;
+  margin-bottom: 32px;
+}
+.hero h1 em {
+  font-style: normal;
+  color: var(--yellow);
+  position: relative;
+}
+.hero-sub {
+  font-size: 18px; font-weight: 300;
+  color: #888; max-width: 480px;
+  line-height: 1.7; margin-bottom: 48px;
+}
+.hero-actions { display: flex; gap: 16px; align-items: center; }
+.btn-primary {
+  background: var(--yellow); color: var(--black);
+  padding: 16px 32px; border-radius: 8px;
+  font-weight: 700; font-size: 15px;
+  text-decoration: none; font-family: 'Syne', sans-serif;
+  transition: transform 0.2s, opacity 0.2s;
+  display: inline-block;
+}
+.btn-primary:hover { transform: translateY(-2px); opacity: 0.9; }
+.btn-ghost {
+  color: var(--mid); font-size: 14px;
+  text-decoration: none; display: flex;
+  align-items: center; gap: 8px;
+  transition: color 0.2s;
+}
+.btn-ghost:hover { color: var(--white); }
+.btn-ghost svg { transition: transform 0.2s; }
+.btn-ghost:hover svg { transform: translateX(4px); }
+
+/* Hero grid bg */
+.hero-grid {
+  position: absolute; inset: 0; z-index: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+  background-size: 60px 60px;
+  mask-image: radial-gradient(ellipse at 70% 50%, black 0%, transparent 70%);
+}
+.hero > *:not(.hero-grid) { position: relative; z-index: 1; }
+
+/* Hero stats */
+.hero-stats {
+  display: flex; gap: 48px; margin-top: 72px;
+  padding-top: 48px;
+  border-top: 1px solid var(--border);
+}
+
+.stat-num {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800; font-size: 36px;
+  color: var(--white); letter-spacing: -1px;
+}
+.stat-num span { color: var(--yellow); }
+.stat-label { font-size: 13px; color: var(--mid); margin-top: 4px; }
+
+/* ── LOGOS ── */
+.logos-section {
+  padding: 48px 60px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 48px;
+}
+.logos-label {
+  font-size: 12px; color: var(--mid);
+  font-family: 'Syne Mono', monospace;
+  white-space: nowrap; letter-spacing: 1px;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+.logos-track {
+  display: flex; gap: 48px; align-items: center;
+  overflow: hidden; flex: 1;
+}
+.logo-pill {
+  background: var(--gray); border: 1px solid var(--border);
+  padding: 10px 22px; border-radius: 6px;
+  font-size: 13px; font-weight: 500; color: #444;
+  white-space: nowrap; font-family: 'Syne', sans-serif;
+  letter-spacing: 0.5px;
+}
+
+/* ── HOW IT WORKS ── */
+.section {
+  padding: 120px 60px;
+  border-bottom: 1px solid var(--border);
+}
+.section-tag {
+  font-family: 'Syne Mono', monospace;
+  font-size: 11px; color: var(--yellow);
+  letter-spacing: 2px; text-transform: uppercase;
+  margin-bottom: 24px;
+}
+.section-title {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: clamp(36px, 4vw, 60px);
+  letter-spacing: -2px;
+  line-height: 1;
+  margin-bottom: 64px;
+  max-width: 600px;
+}
+.section-title em { font-style: normal; color: var(--yellow); }
+
+/* Steps */
+.steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--border); }
+.step {
+  background: var(--black);
+  padding: 48px 40px;
+  position: relative;
+  transition: background 0.3s;
+}
+.step:hover { background: #0e0e0e; }
+.step-num {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800; font-size: 80px;
+  color: #1a1a1a; line-height: 1;
+  margin-bottom: 24px; letter-spacing: -4px;
+}
+.step-title {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700; font-size: 20px;
+  margin-bottom: 12px; letter-spacing: -0.5px;
+}
+.step-desc { font-size: 14px; color: var(--mid); line-height: 1.7; }
+.step-icon {
+  width: 40px; height: 40px;
+  background: var(--gray); border: 1px solid var(--border);
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; margin-bottom: 24px;
+}
+
+/* ── FEATURES ── */
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1px; background: var(--border);
+}
+.feature-card {
+  background: var(--black);
+  padding: 48px 40px;
+  transition: background 0.3s;
+}
+.feature-card:hover { background: #0d0d0d; }
+.feature-card.highlight {
+  background: var(--yellow);
+  color: var(--black);
+}
+.feature-card.highlight .feature-title,
+.feature-card.highlight .feature-desc { color: var(--black); }
+.feature-card.highlight .feature-tag { background: rgba(0,0,0,0.1); color: var(--black); }
+.feature-tag {
+  display: inline-block;
+  background: var(--gray); border: 1px solid var(--border);
+  padding: 4px 12px; border-radius: 100px;
+  font-size: 11px; color: var(--mid);
+  font-family: 'Syne Mono', monospace;
+  margin-bottom: 24px; letter-spacing: 1px;
+  text-transform: uppercase;
+}
+.feature-title {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800; font-size: 26px;
+  letter-spacing: -0.8px; margin-bottom: 12px;
+}
+.feature-desc { font-size: 14px; color: var(--mid); line-height: 1.75; max-width: 380px; }
+
+/* ── TESTIMONIALS ── */
+.testimonials-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+.testi-card {
+  background: var(--gray);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 32px;
+  transition: border-color 0.3s;
+}
+.testi-card:hover { border-color: #333; }
+.testi-stars { color: var(--yellow); font-size: 14px; margin-bottom: 16px; letter-spacing: 2px; }
+.testi-text {
+  font-size: 14px; line-height: 1.75;
+  color: #aaa; margin-bottom: 24px;
+  font-style: italic;
+}
+.testi-author { display: flex; align-items: center; gap: 12px; }
+.testi-avatar {
+  width: 38px; height: 38px; border-radius: 50%;
+  background: var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Syne', sans-serif;
+  font-weight: 700; font-size: 14px;
+  color: var(--yellow);
+}
+.testi-name { font-weight: 600; font-size: 14px; }
+.testi-role { font-size: 12px; color: var(--mid); margin-top: 2px; }
+
+/* ── PRICING ── */
+.pricing-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+.price-card {
+  background: var(--gray);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 40px 32px;
+  position: relative;
+  transition: border-color 0.3s, transform 0.3s;
+}
+.price-card:hover { border-color: #333; transform: translateY(-4px); }
+.price-card.featured {
+  background: var(--yellow);
+  border-color: var(--yellow);
+  color: var(--black);
+}
+.price-card.featured:hover { border-color: var(--yellow); }
+.price-badge {
+  position: absolute; top: -12px; left: 32px;
+  background: var(--black); color: var(--yellow);
+  border: 1px solid var(--yellow);
+  padding: 4px 14px; border-radius: 100px;
+  font-size: 11px; font-family: 'Syne Mono', monospace;
+  letter-spacing: 1px; text-transform: uppercase;
+}
+.price-card.featured .price-badge {
+  background: var(--black); color: var(--yellow);
+}
+.price-name {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700; font-size: 16px;
+  letter-spacing: 1px; text-transform: uppercase;
+  margin-bottom: 24px; color: var(--mid);
+}
+.price-card.featured .price-name { color: rgba(0,0,0,0.5); }
+.price-amount {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800; font-size: 52px;
+  letter-spacing: -3px; line-height: 1;
+  margin-bottom: 4px;
+}
+.price-card.featured .price-amount { color: var(--black); }
+.price-period { font-size: 13px; color: var(--mid); margin-bottom: 32px; }
+.price-card.featured .price-period { color: rgba(0,0,0,0.5); }
+.price-features { list-style: none; margin-bottom: 40px; }
+.price-features li {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 14px; color: #aaa;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+}
+.price-card.featured .price-features li {
+  color: rgba(0,0,0,0.7);
+  border-bottom-color: rgba(0,0,0,0.1);
+}
+.price-features li::before {
+  content: '→';
+  color: var(--yellow); font-size: 12px; flex-shrink: 0;
+}
+.price-card.featured .price-features li::before { color: var(--black); }
+.price-btn {
+  display: block; width: 100%;
+  padding: 14px; border-radius: 8px;
+  text-align: center; font-weight: 700;
+  font-family: 'Syne', sans-serif;
+  font-size: 14px; text-decoration: none;
+  transition: opacity 0.2s, transform 0.2s;
+  background: var(--black); color: var(--white);
+  border: 1px solid var(--border);
+}
+.price-card.featured .price-btn {
+  background: var(--black); color: var(--yellow);
+  border-color: var(--black);
+}
+.price-btn:hover { opacity: 0.8; transform: translateY(-1px); }
+
+/* ── CTA SECTION ── */
+.cta-section {
+  padding: 140px 60px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+.cta-section::before {
+  content: '';
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 600px; height: 600px;
+  background: radial-gradient(circle, rgba(245,230,66,0.08) 0%, transparent 70%);
+  pointer-events: none;
+}
+.cta-title {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: clamp(48px, 6vw, 88px);
+  letter-spacing: -3px; line-height: 0.95;
+  margin-bottom: 32px;
+  position: relative;
+}
+.cta-title em { font-style: normal; color: var(--yellow); }
+.cta-sub {
+  font-size: 18px; color: var(--mid);
+  margin-bottom: 48px; max-width: 420px;
+  margin-left: auto; margin-right: auto;
+  line-height: 1.6;
+}
+
+/* ── FOOTER ── */
+footer {
+  padding: 40px 60px;
+  border-top: 1px solid var(--border);
+  display: flex; align-items: center;
+  justify-content: space-between;
+}
+.footer-logo {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800; font-size: 18px;
+  color: var(--white);
+}
+.footer-logo span { color: var(--yellow); }
+.footer-copy { font-size: 13px; color: var(--mid); }
+.footer-links { display: flex; gap: 24px; }
+.footer-links a {
+  font-size: 13px; color: var(--mid);
+  text-decoration: none; transition: color 0.2s;
+}
+.footer-links a:hover { color: var(--white); }
+
+/* ── ANIMATIONS ── */
+.fade-up {
+  opacity: 0; transform: translateY(32px);
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+.fade-up.visible { opacity: 1; transform: translateY(0); }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 900px) {
+  nav { padding: 18px 24px; }
+  .nav-links { display: none; }
+  .hero { padding: 120px 24px 60px; }
+  .hero-stats { flex-wrap: wrap; gap: 28px; }
+  .logos-section { padding: 32px 24px; flex-direction: column; align-items: flex-start; }
+  .section { padding: 80px 24px; }
+  .steps { grid-template-columns: 1fr; }
+  .features-grid { grid-template-columns: 1fr; }
+  .testimonials-grid { grid-template-columns: 1fr; }
+  .pricing-grid { grid-template-columns: 1fr; }
+  .cta-section { padding: 80px 24px; }
+  footer { padding: 32px 24px; flex-direction: column; gap: 16px; text-align: center; }
+}
+</style>
+</head>
+<body>
+
+<!-- CURSOR -->
+<div class="cursor" id="cursor"></div>
+<div class="cursor-follower" id="cursorFollower"></div>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="nav-logo">Vibe<span>Pitch</span></a>
+  <div class="nav-links">
+    <a href="#how">How it works</a>
+    <a href="#features">Features</a>
+    <a href="#pricing">Pricing</a>
+    <a href="https://vibepitch-b2b-mtk.streamlit.app" class="nav-cta">Launch App →</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-grid"></div>
+  <div class="hero-tag">AI-Powered Sponsorship Outreach</div>
+  <h1>Stop Sending<br/><em>Generic</em><br/>Sponsor Emails.</h1>
+  <p class="hero-sub">VibePitch researches every brand, writes personalised pitches, and sends them — all in minutes. Built for event organisers who are done begging.</p>
+  <div class="hero-actions">
+    <a href="https://vibepitch-b2b-mtk.streamlit.app" class="btn-primary">Start for Free →</a>
+    <a href="#how" class="btn-ghost">
+      See how it works
+      <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path d="M5 12h14M12 5l7 7-7 7"/>
+      </svg>
+    </a>
+  </div>
+  <div class="hero-stats">
+    <div class="stat-item">
+      <div class="stat-num">10x<span>+</span></div>
+      <div class="stat-label">Faster than manual outreach</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">100<span>%</span></div>
+      <div class="stat-label">Personalised per brand</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">0</div>
+      <div class="stat-label">Generic templates used</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">∞</div>
+      <div class="stat-label">Brands you can pitch at once</div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="section" id="how">
+  <div class="section-tag">// Process</div>
+  <h2 class="section-title">From zero to <em>sent</em> in 4 steps.</h2>
+  <div class="steps">
+    <div class="step fade-up">
+      <div class="step-num">01</div>
+      <div class="step-icon">⚙️</div>
+      <div class="step-title">Set Up Your Event</div>
+      <div class="step-desc">Enter your event details — name, dates, footfall, sponsorship deck. Takes 60 seconds.</div>
+    </div>
+    <div class="step fade-up" style="transition-delay:0.1s">
+      <div class="step-num">02</div>
+      <div class="step-icon">🔍</div>
+      <div class="step-title">AI Researches the Brand</div>
+      <div class="step-desc">VibePitch scrapes the brand's website, analyses their audience, goals, and figures out exactly why they should sponsor you.</div>
+    </div>
+    <div class="step fade-up" style="transition-delay:0.2s">
+      <div class="step-num">03</div>
+      <div class="step-icon">✍️</div>
+      <div class="step-title">Generates a Hyper-Personal Email</div>
+      <div class="step-desc">Not a template. A real, specific email that references the brand's products, audience, and marketing goals.</div>
+    </div>
+    <div class="step fade-up" style="transition-delay:0.3s">
+      <div class="step-num">04</div>
+      <div class="step-icon">🚀</div>
+      <div class="step-title">Review & Send</div>
+      <div class="step-desc">Edit if needed, preview it, attach your deck — then send directly from the app. No copy-pasting into Gmail.</div>
+    </div>
+    <div class="step fade-up" style="transition-delay:0.4s">
+      <div class="step-num">05</div>
+      <div class="step-icon">⚡</div>
+      <div class="step-title">Bulk Mode for 100 Brands</div>
+      <div class="step-desc">Upload a CSV of 100 brands. VibePitch researches and writes all 100 emails in parallel. You review and hit send.</div>
+    </div>
+    <div class="step fade-up" style="transition-delay:0.5s">
+      <div class="step-num">06</div>
+      <div class="step-icon">🏆</div>
+      <div class="step-title">Smart Tier Suggestions</div>
+      <div class="step-desc">Upload your brochure and AI suggests the right sponsorship tier for each brand based on their budget and fit.</div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="section" id="features">
+  <div class="section-tag">// Features</div>
+  <h2 class="section-title">Everything you need.<br/><em>Nothing</em> you don't.</h2>
+  <div class="features-grid">
+    <div class="feature-card highlight fade-up">
+      <div class="feature-tag">Core</div>
+      <div class="feature-title">Real Brand Intelligence</div>
+      <div class="feature-desc">VibePitch actually scrapes and reads the brand's website before writing. Every email knows what the brand does, who they sell to, and why your event is a perfect fit.</div>
+    </div>
+    <div class="feature-card fade-up" style="transition-delay:0.1s">
+      <div class="feature-tag">Outreach</div>
+      <div class="feature-title">Direct Email Sending</div>
+      <div class="feature-desc">Connected to Gmail, Brevo, Zoho, or any SMTP provider. Write, preview, attach your deck, and send — all without leaving the app.</div>
+    </div>
+    <div class="feature-card fade-up" style="transition-delay:0.2s">
+      <div class="feature-tag">Scale</div>
+      <div class="feature-title">Bulk Processing Engine</div>
+      <div class="feature-desc">Upload a CSV of hundreds of brands. Get individual, personalised emails for all of them. Review and send in bulk. Your sponsorship team of one just became a team of fifty.</div>
+    </div>
+    <div class="feature-card fade-up" style="transition-delay:0.3s">
+      <div class="feature-tag">Discovery</div>
+      <div class="feature-title">Brand Discovery Engine</div>
+      <div class="feature-desc">Type a domain like "beverages" or "fintech" and get a full list of real brands with intelligence briefs, fit scores, and estimated budgets. Never start from a blank list again.</div>
+    </div>
+    <div class="feature-card fade-up" style="transition-delay:0.4s">
+      <div class="feature-tag">Intelligence</div>
+      <div class="feature-title">Tier Matching AI</div>
+      <div class="feature-desc">Upload your sponsorship brochure. AI extracts all your tiers, then suggests the right tier for each brand based on their estimated budget and goals.</div>
+    </div>
+    <div class="feature-card fade-up" style="transition-delay:0.5s">
+      <div class="feature-tag">Templates</div>
+      <div class="feature-title">Industry Template Library</div>
+      <div class="feature-desc">Pre-built email structures for F&B, Tech, Fashion, Fintech, and EdTech. Or save your own winning emails as reusable templates for future campaigns.</div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section class="section" id="pricing">
+  <div class="section-tag">// Pricing</div>
+  <h2 class="section-title">One sponsor deal<br/>pays for <em>everything.</em></h2>
+  <div class="pricing-grid" style="grid-template-columns: repeat(2,1fr); max-width: 800px;">
+    <div class="price-card featured fade-up">
+      <div class="price-badge">Best Value</div>
+      <div class="price-name">Growth</div>
+      <div class="price-amount">₹999</div>
+      <div class="price-period">per month · 1 user included</div>
+      <div style="font-size:13px; margin-bottom:24px; color:rgba(0,0,0,0.55); font-family:'Syne Mono',monospace;">+ ₹250 / additional user</div>
+      <ul class="price-features">
+        <li>Unlimited pitches</li>
+        <li>Bulk processing (CSV)</li>
+        <li>All industry templates</li>
+        <li>Deep brand research</li>
+        <li>Brochure tier extraction</li>
+        <li>Brand discovery engine</li>
+        <li>Email sending + attachments</li>
+      </ul>
+      <a href="https://vibepitch-b2b-mtk.streamlit.app" class="price-btn">Get Started →</a>
+    </div>
+    <div class="price-card fade-up" style="transition-delay:0.1s">
+      <div class="price-name">Pro</div>
+      <div class="price-amount">₹2,499</div>
+      <div class="price-period">per month · 1 user included</div>
+      <div style="font-size:13px; margin-bottom:24px; color:var(--mid); font-family:'Syne Mono',monospace;">+ ₹200 / additional user</div>
+      <ul class="price-features">
+        <li>Everything in Growth</li>
+        <li>White-label emails</li>
+        <li>Priority AI processing</li>
+        <li>Custom templates</li>
+        <li>Dedicated support</li>
+      </ul>
+      <a href="https://vibepitch-b2b-mtk.streamlit.app" class="price-btn">Start Pro Plan →</a>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section">
+  <h2 class="cta-title fade-up">Your next sponsor<br/>is one <em>email</em> away.</h2>
+  <p class="cta-sub fade-up" style="transition-delay:0.1s">Stop spending weeks on outreach. VibePitch does the research, writes the pitch, and sends it — in minutes.</p>
+  <a href="https://vibepitch-b2b-mtk.streamlit.app" class="btn-primary fade-up" style="transition-delay:0.2s">Launch VibePitch Free →</a>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">Vibe<span>Pitch</span></div>
+  <div class="footer-copy">© 2025 VibePitch. Built for event organisers.</div>
+  <div class="footer-links">
+    <a href="https://vibepitch-b2b-mtk.streamlit.app">App</a>
+    <a href="#pricing">Pricing</a>
+    <a href="#features">Features</a>
+  </div>
+</footer>
+
+<script>
+// Custom cursor
+const cursor = document.getElementById('cursor');
+const follower = document.getElementById('cursorFollower');
+let mx = 0, my = 0, fx = 0, fy = 0;
+document.addEventListener('mousemove', e => {
+  mx = e.clientX; my = e.clientY;
+  cursor.style.left = mx - 6 + 'px';
+  cursor.style.top  = my - 6 + 'px';
+});
+function animFollower() {
+  fx += (mx - fx) * 0.12;
+  fy += (my - fy) *.12;
+  follower.style.left = fx - 18 + 'px';
+  follower.style.top  = fy - 18 + 'px';
+  requestAnimationFrame(animFollower);
+}
+animFollower();
+
+document.querySelectorAll('a, button').forEach(el => {
+  el.addEventListener('mouseenter', () => {
+    cursor.style.transform = 'scale(2.5)';
+    follower.style.transform = 'scale(1.5)';
+  });
+  el.addEventListener('mouseleave', () => {
+    cursor.style.transform = 'scale(1)';
+    follower.style.transform = 'scale(1)';
+  });
+});
+
+// Scroll fade-up
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      e.target.classList.add('visible');
+      observer.unobserve(e.target);
+    }
+  });
+}, { threshold: 0.12 });
+document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+</script>
+</body>
+</html>
